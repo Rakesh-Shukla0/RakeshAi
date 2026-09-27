@@ -843,6 +843,6 @@ app.post('/api/voice-chat', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 RakeshAi Master Server running on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 RakeshAi Master Server running on port ${PORT}`);
 });

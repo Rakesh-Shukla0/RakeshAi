@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>RakeshAi Web Assistant</title>
+
+  <!-- Firebase App, Auth & Firestore SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    :root {
+      --bg-main: #f8fafc;
+      --bg-sidebar: #ffffff;
+      --border-color: #e2e8f0;
+      --text-primary: #1e293b;
+      --text-secondary: #64748b;
+      --primary-color: #2563eb;
+      --primary-hover: #1d4ed8;
+      --user-msg-bg: #2563eb;
+      --bot-msg-bg: #f1f5f9;
+      --code-bg: #0f172a;
+      --danger-color: #ef4444;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Mobile Backdrop Overlay */
+    #sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+      z-index: 998;
+    }
+
+    /* Universal Responsive Sidebar */
+    #sidebar {
+      width: 290px;
+      min-width: 290px;
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 999;
+    }
+
+    #sidebar.collapsed {
+      margin-left: -290px;
+    }
+
+    .sidebar-header {
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .sidebar-header h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .close-icon-btn {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 4px 8px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+
+    .close-icon-btn:hover {
+      background-color: #f1f5f9;
+      color: var(--text-primary);
+    }
+
+    .new-chat-btn {
+      margin: 12px 14px;
+      padding: 10px;
+      background-color: #eff6ff;
+      color: var(--primary-color);
+      border: 1px dashed var(--primary-color);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .new-chat-btn:hover { background-color: #dbeafe; }
+
+    /* Scrollable History List */
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .history-list::-webkit-scrollbar { width: 5px; }
+    .history-list::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .history-item {
+      padding: 8px 10px;
+      background-color: #f8fafc;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .history-item:hover {
+      background-color: #f1f5f9;
+      border-color: var(--border-color);
+    }
+
+    .history-item.active {
+      background-color: #e0e7ff;
+      color: var(--primary-color);
+      font-weight: 600;
+      border-color: #c7d2fe;
+    }
+
+    .history-title-area {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    .history-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .delete-chat-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 4px 6px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+
+    .delete-chat-btn:hover {
+      color: var(--danger-color);
+      background-color: #fee2e2;
+    }
+
+    /* Profile Section */
+    .profile-section {
+      padding: 14px 16px;
+      border-top: 1px solid var(--border-color);
+      position: relative;
+    }
+
+    .profile-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 8px;
+    }
+
+    .profile-card:hover { background-color: #f1f5f9; }
+
+    .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .profile-info { flex: 1; overflow: hidden; }
+
+    .profile-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .profile-status {
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+
+    .logout-dropdown {
+      display: none;
+      position: absolute;
+      bottom: 70px;
+      left: 16px;
+      right: 16px;
+      background-color: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+    }
+
+    .logout-dropdown.active { display: block; }
+
+    .dropdown-action-btn {
+      width: 100%;
+      padding: 10px 14px;
+      background: none;
+      border: none;
+      text-align: left;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .dropdown-action-btn.login { color: var(--primary-color); }
+    .dropdown-action-btn.logout { color: var(--danger-color); }
+    .dropdown-action-btn:hover { background-color: #f8fafc; }
+
+    /* Main Chat Layout */
+    #main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      position: relative;
+      background-color: var(--bg-main);
+      overflow: hidden;
+    }
+
+    header {
+      background-color: #ffffff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .menu-btn {
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: var(--text-primary);
+      padding: 4px 8px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .menu-btn:hover { background-color: #f1f5f9; }
+
+    header h1 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .header-location {
+      margin-left: auto;
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      background-color: #f1f5f9;
+      padding: 6px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+    }
+
+    #chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .message {
+      max-width: 82%;
+      line-height: 1.5;
+      font-size: 0.94rem;
+      word-wrap: break-word;
+    }
+
+    .user-message {
+      align-self: flex-end;
+      background-color: var(--user-msg-bg);
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 14px 14px 2px 14px;
+    }
+
+    .assistant-message {
+      align-self: flex-start;
+      background-color: var(--bot-msg-bg);
+      color: var(--text-primary);
+      padding: 14px 18px;
+      border-radius: 14px 14px 14px 2px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Login Required Alert Banner */
+    .login-lock-card {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      max-width: 450px;
+      margin: 40px auto;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
+    }
+
+    .login-lock-card h3 {
+      font-size: 1.1rem;
+      color: var(--primary-color);
+      margin-bottom: 8px;
+    }
+
+    .login-lock-card p {
+      font-size: 0.88rem;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .google-signin-btn {
+      background-color: #ffffff;
+      color: #1e293b;
+      border: 1px solid #cbd5e1;
+      padding: 10px 20px;
+      border-radius: 24px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .google-signin-btn:hover {
+      background-color: #f8fafc;
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    /* Code Blocks */
+    .code-container {
+      position: relative;
+      background: var(--code-bg);
+      border-radius: 8px;
+      margin: 10px 0;
+      overflow: hidden;
+    }
+
+    .code-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #020617;
+      padding: 6px 12px;
+      font-size: 11px;
+      color: #94a3b8;
+      font-family: monospace;
+    }
+
+    .copy-btn {
+      background: #334155;
+      color: #f8fafc;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+
+    .copy-btn:hover { background: #475569; }
+
+    .code-container pre {
+      margin: 0;
+      padding: 12px;
+      overflow-x: auto;
+      color: #f8fafc;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 0.88rem;
+    }
+
+    .tts-action-bar {
+      display: flex;
+      align-items: center;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    .tts-btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      color: var(--text-secondary);
+      border-radius: 16px;
+      padding: 4px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tts-btn.speaking {
+      background: var(--primary-color);
+      color: #ffffff;
+      border-color: var(--primary-color);
+    }
+
+    /* Input Bar */
+    #input-container {
+      background-color: #ffffff;
+      padding: 12px 18px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+
+    #user-input {
+      flex: 1;
+      padding: 12px 16px;
+      background-color: #f8fafc;
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      outline: none;
+      font-size: 0.95rem;
+    }
+
+    #user-input:focus {
+      border-color: var(--primary-color);
+      background-color: #ffffff;
+    }
+
+    #user-input:disabled {
+      background-color: #f1f5f9;
+      cursor: not-allowed;
+      color: #94a3b8;
+    }
+
+    .action-circle-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      transition: all 0.2s;
+    }
+
+    .action-circle-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #mic-btn {
+      background-color: #f1f5f9;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+    }
+
+    #mic-btn.recording {
+      background-color: #fee2e2;
+      color: var(--danger-color);
+      border-color: #fca5a5;
+      animation: pulse-mic 1s infinite;
+    }
+
+    @keyframes pulse-mic {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    #send-btn {
+      background-color: var(--primary-color);
+      color: #ffffff;
+    }
+
+    #send-btn:hover:not(:disabled) { background-color: var(--primary-hover); }
+
+    @media (max-width: 768px) {
+      #sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        margin-left: 0;
+        transform: translateX(-100%);
+      }
+      #sidebar.open { transform: translateX(0); }
+      #sidebar-overlay.active { display: block; }
+      .message { max-width: 90%; }
+      #chat-box { padding: 12px; gap: 10px; }
+      #input-container { padding: 8px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="sidebar-overlay"></div>
+
+  <!-- Universal Sidebar -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <h2>Chat History</h2>
+      <button class="close-icon-btn" id="close-sidebar-btn" title="Close Sidebar">&times;</button>
+    </div>
+
+    <div class="new-chat-btn" id="new-chat-btn">
+      <span>+</span> Nayi Chat Shuru Karein
+    </div>
+
+    <div class="history-list" id="history-container"></div>
+
+    <div class="profile-section">
+      <div class="logout-dropdown" id="logout-menu">
+        <button class="dropdown-action-btn login" id="auth-action-btn">🔑 Google se Login</button>
+      </div>
+      <div class="profile-card" id="profile-btn">
+        <div class="avatar" id="user-avatar">?</div>
+        <div class="profile-info">
+          <div class="profile-name" id="user-display-name">Guest User</div>
+          <div class="profile-status" id="user-status-text">Click to Login</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main id="main-content">
+    <header>
+      <button class="menu-btn" id="open-sidebar-btn" title="Toggle Sidebar">&#9776;</button>
+      <h1>RakeshAi</h1>
+      <span class="header-location" id="location-text">📍 Location Check...</span>
+    </header>
+
+    <div id="chat-box">
+      <!-- Default Greeting or Login Notice dynamically injected -->
+    </div>
+
+    <div id="input-container">
+      <input type="text" id="user-input" placeholder="⚠️ Pehle Google se login karein..." autocomplete="off" disabled />
+      <button class="action-circle-btn" id="mic-btn" title="Voice Input" disabled>🎤</button>
+      <button class="action-circle-btn" id="send-btn" title="Send" disabled>➤</button>
+    </div>
+  </main>
+
+  <script>
+    // ==========================================
+    // 1. FIREBASE AUTH & FIRESTORE CONFIGURATION
+    // ==========================================
+     const firebaseConfig = {
+        apiKey: "AIzaSyBg_b1Ju50LiIgkgLdxmfZOm-rAGOi0sEM",
+        authDomain: "rakeshai-web.firebaseapp.com",
+        projectId: "rakeshai-web",
+        storageBucket: "rakeshai-web.firebasestorage.app",
+        messagingSenderId: "1095603512241",
+        appId: "1:1095603512241:web:5e5cdbf6ebf14f8259d390",
+        measurementId: "G-1LYSX7VKCY"
+    };
+
+    let auth = null;
+    let db = null;
+    let currentUser = null;
+    let currentUserId = null;
+    let isFirebaseReady = false;
+
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const micBtn = document.getElementById('mic-btn');
+    const historyContainer = document.getElementById('history-container');
+    const locationText = document.getElementById('location-text');
+
+    let currentSessionId = localStorage.getItem('rakesh_ai_current_session_id');
+    if (!currentSessionId) {
+      currentSessionId = "session_" + Date.now();
+      localStorage.setItem('rakesh_ai_current_session_id', currentSessionId);
+    }
+    let localCache = JSON.parse(localStorage.getItem('rakesh_ai_local_sessions') || '{}');
+
+    try {
+      if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+        firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        isFirebaseReady = true;
+
+        auth.onAuthStateChanged((user) => {
+          currentUser = user;
+          if (user) {
+            currentUserId = user.uid;
+            unlockChatUI(user);
+            loadSidebarFromFirestore();
+            if (currentSessionId && localCache[currentSessionId]) {
+              loadSession(currentSessionId);
+            } else {
+              startNewChat();
+            }
+          } else {
+            currentUserId = null;
+            lockChatUI();
+          }
+        });
+      } else {
+        lockChatUI();
+      }
+    } catch (e) {
+      console.warn("Firebase Init notice:", e.message);
+      lockChatUI();
+    }
+
+    // UI Locks when not logged in
+    function lockChatUI() {
+      userInput.disabled = true;
+      sendBtn.disabled = true;
+      micBtn.disabled = true;
+      userInput.placeholder = "⚠️ Sawal poochne ke liye pehle login karein...";
+
+      document.getElementById('user-display-name').textContent = "Guest User";
+      document.getElementById('user-status-text').textContent = "Login Required";
+      document.getElementById('user-avatar').style.backgroundImage = 'none';
+      document.getElementById('user-avatar').textContent = '?';
+
+      const authBtn = document.getElementById('auth-action-btn');
+      authBtn.textContent = "🔑 Google se Login";
+      authBtn.className = "dropdown-action-btn login";
+
+      historyContainer.innerHTML = '';
+
+      chatBox.innerHTML = `
+        <div class="login-lock-card">
+          <h3>🔒 Login Required</h3>
+          <p>RakeshAi se baat karne aur chat history save karne ke liye kripya apne Google account se sign in karein.</p>
+          <button class="google-signin-btn" onclick="triggerGoogleLogin()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google" />
+            Google se Sign In Karein
+          </button>
+        </div>
+      `;
+    }
+
+    // UI Unlocks when logged in
+    function unlockChatUI(user) {
+      userInput.disabled = false;
+      sendBtn.disabled = false;
+      micBtn.disabled = false;
+      userInput.placeholder = "Apna sawal yahan likhein ya mic dabayein...";
+
+      document.getElementById('user-display-name').textContent = user.displayName || "User";
+      document.getElementById('user-status-text').textContent = "Google Account";
+
+      const avatarEl = document.getElementById('user-avatar');
+      if (user.photoURL) {
+        avatarEl.style.backgroundImage = `url('${user.photoURL}')`;
+        avatarEl.textContent = '';
+      } else {
+        avatarEl.style.backgroundImage = 'none';
+        avatarEl.textContent = (user.displayName || 'U')[0].toUpperCase();
+      }
+
+      const authBtn = document.getElementById('auth-action-btn');
+      authBtn.textContent = "🚪 Logout Karein";
+      authBtn.className = "dropdown-action-btn logout";
+    }
+
+    function triggerGoogleLogin() {
+      if (!isFirebaseReady) {
+        alert("Pehle index.html me apni Firebase keys paste karein.");
+        return;
+      }
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider).catch((err) => alert("Login Error: " + err.message));
+    }
+
+    document.getElementById('auth-action-btn').addEventListener('click', () => {
+      if (currentUser) {
+        auth.signOut().then(() => document.getElementById('logout-menu').classList.remove('active'));
+      } else {
+        triggerGoogleLogin();
+        document.getElementById('logout-menu').classList.remove('active');
+      }
+    });
+
+    // ==========================================
+    // 2. UNIVERSAL SIDEBAR TOGGLE
+    // ==========================================
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const openSidebarBtn = document.getElementById('open-sidebar-btn');
+    const closeSidebarBtn = document.getElementById('close-sidebar-btn');
+
+    function toggleSidebar() {
+      if (window.innerWidth <= 768) {
+        const isOpen = sidebar.classList.contains('open');
+        if (isOpen) {
+          sidebar.classList.remove('open');
+          overlay.classList.remove('active');
+        } else {
+          sidebar.classList.add('open');
+          overlay.classList.add('active');
+        }
+      } else {
+        sidebar.classList.toggle('collapsed');
+      }
+    }
+
+    function closeSidebar() {
+      if (window.innerWidth <= 768) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+      } else {
+        sidebar.classList.add('collapsed');
+      }
+    }
+
+    openSidebarBtn.onclick = toggleSidebar;
+    closeSidebarBtn.onclick = closeSidebar;
+    overlay.onclick = closeSidebar;
+
+    const profileBtn = document.getElementById('profile-btn');
+    const logoutMenu = document.getElementById('logout-menu');
+    profileBtn.onclick = (e) => {
+      e.stopPropagation();
+      logoutMenu.classList.toggle('active');
+    };
+    document.addEventListener('click', (e) => {
+      if (!logoutMenu.contains(e.target) && !profileBtn.contains(e.target)) {
+        logoutMenu.classList.remove('active');
+      }
+    });
+
+    // ==========================================
+    // 3. FIRESTORE PERSISTENT CHAT & HISTORY
+    // ==========================================
+    let userLocation = { lat: 27.1767, lon: 78.0081, city: "Agra" };
+
+    function syncLocalCache() {
+      localStorage.setItem('rakesh_ai_local_sessions', JSON.stringify(localCache));
+      renderSidebarUI();
+    }
+
+    function renderSidebarUI() {
+      if (!currentUser) return;
+      historyContainer.innerHTML = '';
+      const sIds = Object.keys(localCache).reverse();
+
+      sIds.forEach((sId) => {
+        const data = localCache[sId];
+        if (!data || !data.messages || data.messages.length === 0) return;
+
+        const item = document.createElement('div');
+        item.className = 'history-item' + (sId === currentSessionId ? ' active' : '');
+        item.innerHTML = `
+          <div class="history-title-area">
+            <span>💬</span>
+            <span class="history-title">${data.preview || data.title || 'Conversation'}</span>
+          </div>
+          <button class="delete-chat-btn" title="Delete">🗑️</button>
+        `;
+
+        item.querySelector('.history-title-area').onclick = () => loadSession(sId);
+        item.querySelector('.delete-chat-btn').onclick = (e) => {
+          e.stopPropagation();
+          deleteSession(sId);
+        };
+        historyContainer.appendChild(item);
+      });
+    }
+
+    function loadSidebarFromFirestore() {
+      if (!isFirebaseReady || !db || !currentUserId) return;
+
+      db.collection('users').doc(currentUserId).collection('sessions')
+        .onSnapshot((snapshot) => {
+          if (!snapshot || snapshot.empty) return;
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            const sId = doc.id;
+            if (!localCache[sId]) {
+              localCache[sId] = { preview: data.preview || data.title, messages: [] };
+            } else {
+              localCache[sId].preview = data.preview || data.title;
+            }
+          });
+          syncLocalCache();
+        }, (err) => console.warn("Firestore listener warning:", err.message));
+    }
+
+    async function loadSession(sId) {
+      if (!currentUser) return;
+      currentSessionId = sId;
+      localStorage.setItem('rakesh_ai_current_session_id', currentSessionId);
+      renderSidebarUI();
+
+      chatBox.innerHTML = '';
+
+      if (localCache[sId] && localCache[sId].messages && localCache[sId].messages.length > 0) {
+        localCache[sId].messages.forEach((msg) => {
+          const div = document.createElement('div');
+          div.className = `message ${msg.role === 'user' ? 'user-message' : 'assistant-message'}`;
+          if (msg.role === 'user') div.textContent = msg.content;
+          else div.innerHTML = renderAssistantMessage(msg.content);
+          chatBox.appendChild(div);
+        });
+      } else {
+        chatBox.innerHTML = `
+          <div class="message assistant-message">
+            👋 Namaste! Main <strong>RakeshAi</strong> hoon. Aaj main aapki kya madad kar sakta hoon?
+          </div>
+        `;
+      }
+
+      if (isFirebaseReady && db && currentUserId) {
+        try {
+          const snapshot = await db.collection('users').doc(currentUserId)
+            .collection('sessions').doc(sId)
+            .collection('messages')
+            .get();
+
+          if (!snapshot.empty) {
+            chatBox.innerHTML = '';
+            const msgs = [];
+            snapshot.forEach((doc) => msgs.push(doc.data()));
+            msgs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+            localCache[sId].messages = msgs;
+            syncLocalCache();
+
+            msgs.forEach((msg) => {
+              const div = document.createElement('div');
+              div.className = `message ${msg.role === 'user' ? 'user-message' : 'assistant-message'}`;
+              if (msg.role === 'user') div.textContent = msg.content;
+              else div.innerHTML = renderAssistantMessage(msg.content);
+              chatBox.appendChild(div);
+            });
+          }
+        } catch(e) {}
+      }
+
+      chatBox.scrollTop = chatBox.scrollHeight;
+      if (window.innerWidth <= 768) closeSidebar();
+    }
+
+    async function deleteSession(sId) {
+      if (!confirm("Kya aap sach me is chat ko delete karna chahte hain?")) return;
+
+      delete localCache[sId];
+      syncLocalCache();
+
+      if (isFirebaseReady && db && currentUserId) {
+        try {
+          await db.collection('users').doc(currentUserId).collection('sessions').doc(sId).delete();
+        } catch(e) {}
+      }
+
+      if (currentSessionId === sId) {
+        startNewChat();
+      }
+    }
+
+    function startNewChat() {
+      if (!currentUser) return;
+      currentSessionId = "session_" + Date.now();
+      localStorage.setItem('rakesh_ai_current_session_id', currentSessionId);
+      chatBox.innerHTML = `
+        <div class="message assistant-message">
+          👋 Nayi chat shuru ho gayi hai! Boliye, kya search karna hai?
+        </div>
+      `;
+      renderSidebarUI();
+      if (window.innerWidth <= 768) closeSidebar();
+    }
+
+    document.getElementById('new-chat-btn').onclick = startNewChat;
+
+    // ==========================================
+    // 4. GEOLOCATION
+    // ==========================================
+    function initLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (pos) => {
+            userLocation.lat = pos.coords.latitude;
+            userLocation.lon = pos.coords.longitude;
+            try {
+              const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
+              const data = await res.json();
+              userLocation.city = data.address?.city || data.address?.town || data.address?.district || "Agra";
+              locationText.textContent = `📍 ${userLocation.city}`;
+            } catch(e) {
+              locationText.textContent = "📍 Live Location Active";
+            }
+          },
+          () => { locationText.textContent = "📍 Agra (Default)"; },
+          { timeout: 6000 }
+        );
+      } else {
+        locationText.textContent = "📍 Agra (Default)";
+      }
+    }
+    window.addEventListener('load', initLocation);
+
+    // ==========================================
+    // 5. CODE COPY & TTS ENGINE
+    // ==========================================
+    function copyCodeText(button) {
+      const container = button.closest('.code-container');
+      const code = container.querySelector('code').innerText;
+      navigator.clipboard.writeText(code).then(() => {
+        button.innerText = 'Copied! ✅';
+        setTimeout(() => { button.innerText = 'Copy'; }, 2000);
+      });
+    }
+
+    let currentUtterance = null;
+    function toggleSpeech(textToRead, btnElement) {
+      if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        document.querySelectorAll('.tts-btn').forEach(b => {
+          b.classList.remove('speaking');
+          b.innerHTML = '🔊 Suniye';
+        });
+        if (btnElement.getAttribute('data-speaking') === 'true') {
+          btnElement.setAttribute('data-speaking', 'false');
+          return;
+        }
+      }
+
+      currentUtterance = new SpeechSynthesisUtterance(textToRead);
+      currentUtterance.lang = /[\u0900-\u097F]/.test(textToRead) ? 'hi-IN' : 'en-US';
+      btnElement.classList.add('speaking');
+      btnElement.setAttribute('data-speaking', 'true');
+      btnElement.innerHTML = '⏹️ Rokiye';
+
+      currentUtterance.onend = () => {
+        btnElement.classList.remove('speaking');
+        btnElement.setAttribute('data-speaking', 'false');
+        btnElement.innerHTML = '🔊 Suniye';
+      };
+      currentUtterance.onerror = () => {
+        btnElement.classList.remove('speaking');
+        btnElement.setAttribute('data-speaking', 'false');
+        btnElement.innerHTML = '🔊 Suniye';
+      };
+
+      window.speechSynthesis.speak(currentUtterance);
+    }
+
+    function renderAssistantMessage(markdownContent) {
+      let formattedHtml = markdownContent.replace(/```([a-zA-Z0-9]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+        const languageTitle = lang ? lang.toUpperCase() : 'CODE';
+        return `
+          <div class="code-container">
+            <div class="code-header">
+              <span>${languageTitle}</span>
+              <button class="copy-btn" onclick="copyCodeText(this)">Copy</button>
+            </div>
+            <pre><code>${code.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
+          </div>
+        `;
+      });
+
+      formattedHtml = formattedHtml
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br/>');
+
+      const speechCleanText = markdownContent
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/[#*`>_-]/g, ' ')
+        .trim();
+
+      const encodedSpeech = encodeURIComponent(speechCleanText);
+
+      return `
+        ${formattedHtml}
+        <div class="tts-action-bar">
+          <button class="tts-btn" onclick="toggleSpeech(decodeURIComponent('${encodedSpeech}'), this)">
+            🔊 Suniye
+          </button>
+        </div>
+      `;
+    }
+
+    // ==========================================
+    // 6. SPEECH RECOGNITION (MIC)
+    // ==========================================
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let isRecognizing = false;
+
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'hi-IN';
+
+      recognition.onstart = () => {
+        isRecognizing = true;
+        micBtn.classList.add('recording');
+        userInput.placeholder = "Aapki aawaz sun raha hoon...";
+      };
+
+      recognition.onresult = (event) => {
+        const voiceText = event.results[0][0].transcript;
+        userInput.value = voiceText;
+        handleSendMessage();
+      };
+
+      recognition.onerror = () => stopMic();
+      recognition.onend = () => stopMic();
+    }
+
+    function stopMic() {
+      isRecognizing = false;
+      micBtn.classList.remove('recording');
+      userInput.placeholder = "Apna sawal likhein ya mic dabakar bolein...";
+    }
+
+    micBtn.onclick = () => {
+      if (!currentUser) {
+        alert("Pehle Google se login karein!");
+        return;
+      }
+      if (!SpeechRecognition) {
+        alert("Aapka browser Web Speech support nahi karta. Chrome ya Edge use karein.");
+        return;
+      }
+      if (!isRecognizing) {
+        try { recognition.start(); } catch(e) { recognition.stop(); }
+      } else {
+        recognition.stop();
+      }
+    };
+
+    // ==========================================
+    // 7. MESSAGE DISPATCHER (LOGIN STRICTLY REQUIRED)
+    // ==========================================
+    async function handleSendMessage() {
+      if (!currentUser) {
+        alert("⚠️ Sawal poochne ke liye pehle Google account se login karein!");
+        triggerGoogleLogin();
+        return;
+      }
+
+      const message = userInput.value.trim();
+      if (!message) return;
+
+      const userDiv = document.createElement('div');
+      userDiv.className = 'message user-message';
+      userDiv.textContent = message;
+      chatBox.appendChild(userDiv);
+
+      userInput.value = '';
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      if (!localCache[currentSessionId]) {
+        localCache[currentSessionId] = {
+          preview: message.length > 25 ? message.substring(0, 25) + "..." : message,
+          messages: []
+        };
+      }
+      localCache[currentSessionId].messages.push({ role: 'user', content: message, timestamp: Date.now() });
+      syncLocalCache();
+
+      if (isFirebaseReady && db && currentUserId) {
+        try {
+          const sessionRef = db.collection('users').doc(currentUserId).collection('sessions').doc(currentSessionId);
+          sessionRef.set({
+            preview: localCache[currentSessionId].preview,
+            title: localCache[currentSessionId].preview,
+            lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(() => {});
+
+          sessionRef.collection('messages').add({
+            role: 'user',
+            content: message,
+            timestamp: Date.now()
+          }).catch(() => {});
+        } catch(e) {}
+      }
+
+      const loadingDiv = document.createElement('div');
+      loadingDiv.className = 'message assistant-message';
+      loadingDiv.textContent = 'Soch raha hoon...';
+      chatBox.appendChild(loadingDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const response = await fetch('http://localhost:5500/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: message,
+            location: userLocation,
+            sessionId: currentSessionId,
+            userId: currentUserId
+          })
+        });
+
+        const data = await response.json();
+        const replyText = data.reply || "Koi jawab nahi mila.";
+        loadingDiv.innerHTML = renderAssistantMessage(replyText);
+
+        localCache[currentSessionId].messages.push({ role: 'assistant', content: replyText, timestamp: Date.now() });
+        syncLocalCache();
+
+        if (isFirebaseReady && db && currentUserId) {
+          try {
+            db.collection('users').doc(currentUserId)
+              .collection('sessions').doc(currentSessionId)
+              .collection('messages').add({
+                role: 'assistant',
+                content: replyText,
+                timestamp: Date.now()
+              }).catch(() => {});
+          } catch(e) {}
+        }
+      } catch (err) {
+        loadingDiv.textContent = "Server se response nahi mila. Check karein ki backend terminal me chal raha hai.";
+      }
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    sendBtn.onclick = handleSendMessage;
+    userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleSendMessage();
+    });
+  </script>
+</body>
+</html>

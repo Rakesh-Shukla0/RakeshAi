@@ -16,6 +16,7 @@ console.warn = (...args) => {
   originalWarn(...args);
 };
 
+const rateLimit = require('express-rate-limit');
 const express = require('express');
 const cors = require('cors');
 const axios = require('axios');
@@ -55,9 +56,30 @@ try {
 const app = express();
 const PORT = process.env.PORT || 5500;
 
+// Render proxy ke through aane wale client IP ko correctly read karne ke liye
+app.set('trust proxy', 1);
+
 app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// ----------------------------------------------------
+// RATE LIMITER CONFIGURATION (API Abuse Protection)
+// ----------------------------------------------------
+const chatLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minute ka window
+  max: 30, // Har IP ko 15 minute me max 30 requests allow karega
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    reply: "⚠️ **Limit Reached:** Aapne 15 minute ki request limit cross kar di hai. Kripya thodi der baad prayas karein.",
+    timestamp: new Date().toISOString()
+  }
+});
+
+// Chat aur Voice endpoints dono par limiter apply karein
+app.use('/api/chat', chatLimiter);
+app.use('/api/voice-chat', chatLimiter);
 
 // ----------------------------------------------------
 // 2. SMART SYSTEM PROMPT (LANGUAGE, IDENTITY & TYPO HANDLING)

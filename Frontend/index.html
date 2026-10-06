@@ -26,9 +26,8 @@
       --text-secondary: #64748b;
       --primary-color: #2563eb;
       --primary-hover: #1d4ed8;
-      --primary-light: #eff6ff;
       --user-msg-bg: #2563eb;
-      --bot-msg-bg: #f1f5f9;
+      --bot-msg-bg: #ffffff;
       --code-bg: #0f172a;
       --danger-color: #ef4444;
       --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
@@ -43,7 +42,7 @@
     }
 
     /* ============================================================
-       LANDING PAGE (SHOWN WHEN LOGGED OUT)
+       LANDING PAGE STYLES
        ============================================================ */
     #landing-page {
       position: fixed;
@@ -58,7 +57,6 @@
       scroll-behavior: smooth;
     }
 
-    /* Landing Nav */
     .landing-nav {
       position: sticky;
       top: 0;
@@ -140,7 +138,6 @@
       box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
     }
 
-    /* Hero Section */
     .hero-section {
       padding: 80px 20px 60px;
       text-align: center;
@@ -272,7 +269,7 @@
 
     .preview-bot-msg {
       align-self: flex-start;
-      background: #f1f5f9;
+      background: #f8fafc;
       color: #1e293b;
       padding: 14px 18px;
       border-radius: 14px 14px 14px 2px;
@@ -281,7 +278,6 @@
       border: 1px solid var(--border-color);
     }
 
-    /* Capabilities Showcase Section */
     .features-section {
       background: #ffffff;
       border-top: 1px solid var(--border-color);
@@ -323,7 +319,6 @@
       background: #f8fafc;
       border: 1px solid var(--border-color);
       transition: all 0.3s ease;
-      position: relative;
     }
 
     .feature-card:hover {
@@ -359,7 +354,6 @@
       line-height: 1.5;
     }
 
-    /* Footer */
     .landing-footer {
       padding: 34px 20px;
       text-align: center;
@@ -394,12 +388,6 @@
       text-align: center;
       box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
       position: relative;
-      animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-
-    @keyframes modalPop {
-      0% { transform: scale(0.92); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
     }
 
     .modal-close-btn {
@@ -414,7 +402,7 @@
     }
 
     /* ============================================================
-       APPLICATION CHAT UI (SHOWN WHEN LOGGED IN)
+       APPLICATION CHAT UI STYLES
        ============================================================ */
     #app-container {
       display: none;
@@ -644,7 +632,6 @@
       cursor: pointer;
     }
 
-    .dropdown-action-btn.login { color: var(--primary-color); }
     .dropdown-action-btn.logout { color: var(--danger-color); }
     .dropdown-action-btn:hover { background-color: #f8fafc; }
 
@@ -702,16 +689,16 @@
     #chat-box {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
+      padding: 24px;
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 18px;
     }
 
     .message {
       max-width: 82%;
-      line-height: 1.5;
-      font-size: 0.94rem;
+      line-height: 1.6;
+      font-size: 0.95rem;
       word-wrap: break-word;
     }
 
@@ -727,9 +714,49 @@
       align-self: flex-start;
       background-color: var(--bot-msg-bg);
       color: var(--text-primary);
-      padding: 14px 18px;
+      padding: 18px 22px;
       border-radius: 14px 14px 14px 2px;
       border: 1px solid var(--border-color);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    /* ChatGPT Clean Typography & Tables */
+    .assistant-message h2, .assistant-message h3 {
+      margin: 12px 0 6px 0;
+      color: #1e293b;
+      font-weight: 700;
+    }
+
+    .assistant-message ul, .assistant-message ol {
+      margin: 8px 0 8px 20px;
+      line-height: 1.6;
+    }
+
+    .assistant-message blockquote {
+      border-left: 4px solid var(--primary-color);
+      background: rgba(37, 99, 235, 0.05);
+      padding: 8px 14px;
+      margin: 10px 0;
+      border-radius: 0 8px 8px 0;
+      color: #334155;
+    }
+
+    .assistant-message table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 0.9rem;
+    }
+
+    .assistant-message th, .assistant-message td {
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      text-align: left;
+    }
+
+    .assistant-message th {
+      background-color: #f8fafc;
+      font-weight: 600;
     }
 
     .google-signin-btn {
@@ -799,8 +826,8 @@
     .tts-action-bar {
       display: flex;
       align-items: center;
-      margin-top: 8px;
-      padding-top: 6px;
+      margin-top: 10px;
+      padding-top: 8px;
       border-top: 1px solid #e2e8f0;
     }
 
@@ -911,7 +938,7 @@
 <body>
 
   <!-- ============================================================
-       1. LANDING PAGE (VISIBLE TO GUESTS)
+       1. LANDING PAGE
        ============================================================ -->
   <div id="landing-page">
     <nav class="landing-nav">
@@ -944,7 +971,6 @@
         </button>
       </div>
 
-      <!-- Live Floating Preview Card -->
       <div class="hero-preview-card">
         <div class="preview-header">
           <span class="dot red"></span>
@@ -966,7 +992,6 @@
       </div>
     </section>
 
-    <!-- Capabilities Showcase -->
     <section class="features-section">
       <div class="section-header">
         <h2>RakeshAi Kya-Kya Kar Sakta Hai?</h2>
@@ -1034,12 +1059,11 @@
   </div>
 
   <!-- ============================================================
-       2. FULL CHAT APPLICATION (SHOWN AFTER SUCCESSFUL LOGIN)
+       2. FULL CHAT APPLICATION
        ============================================================ -->
   <div id="app-container">
     <div id="sidebar-overlay"></div>
 
-    <!-- Universal Sidebar -->
     <aside id="sidebar">
       <div class="sidebar-header">
         <h2>Chat History</h2>
@@ -1066,7 +1090,6 @@
       </div>
     </aside>
 
-    <!-- Main Content Area -->
     <main id="main-content">
       <header>
         <button class="menu-btn" id="open-sidebar-btn" title="Toggle Sidebar">&#9776;</button>
@@ -1074,9 +1097,7 @@
         <span class="header-location" id="location-text">📍 Location Check...</span>
       </header>
 
-      <div id="chat-box">
-        <!-- Messages dynamically injected -->
-      </div>
+      <div id="chat-box"></div>
 
       <div id="input-container">
         <input type="text" id="user-input" placeholder="Apna sawal yahan likhein ya mic dabayein..." autocomplete="off" />
@@ -1458,7 +1479,7 @@
       currentUtterance.lang = /[\u0900-\u097F]/.test(textToRead) ? 'hi-IN' : 'en-US';
       btnElement.classList.add('speaking');
       btnElement.setAttribute('data-speaking', 'true');
-      btnElement.innerHTML = '⏹️ Rokiye';
+      btnElement.innerHTML = '⏹️️ Rokiye';
 
       currentUtterance.onend = () => {
         btnElement.classList.remove('speaking');
@@ -1561,7 +1582,7 @@
     };
 
     // ==========================================
-    // 7. MESSAGE DISPATCHER (LOGIN STRICTLY REQUIRED)
+    // 7. MESSAGE DISPATCHER (LOGIN REQUIRED)
     // ==========================================
     async function handleSendMessage() {
       if (!currentUser) {

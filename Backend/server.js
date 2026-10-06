@@ -56,7 +56,7 @@ try {
 const app = express();
 const PORT = process.env.PORT || 5500;
 
-// Render proxy ke through aane wale client IP ko correctly read karne ke liye
+// Render proxy ke through client IP access karne ke liye
 app.set('trust proxy', 1);
 
 app.use(cors({ origin: '*' }));
@@ -67,8 +67,8 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // RATE LIMITER CONFIGURATION (API Abuse Protection)
 // ----------------------------------------------------
 const chatLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minute ka window
-  max: 30, // Har IP ko 15 minute me max 30 requests allow karega
+  windowMs: 15 * 60 * 1000,
+  max: 30,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
@@ -77,12 +77,11 @@ const chatLimiter = rateLimit({
   }
 });
 
-// Chat aur Voice endpoints dono par limiter apply karein
 app.use('/api/chat', chatLimiter);
 app.use('/api/voice-chat', chatLimiter);
 
 // ----------------------------------------------------
-// 2. SMART SYSTEM PROMPT (LANGUAGE, IDENTITY & TYPO HANDLING)
+// 2. SMART SYSTEM PROMPT (CHATGPT-STYLE DECORATIVE OUTPUT)
 // ----------------------------------------------------
 function getLiveDateContext(userLocation = null) {
   const now = new Date();
@@ -94,20 +93,19 @@ function getLiveDateContext(userLocation = null) {
 
   const cityName = userLocation?.city || 'Agra';
 
-  return `[System Context: Current Time: ${dateStr}, User Location:${cityName}, India.]\n` +
-         `Identity & Ownership Rules:\n` +
+  return `[System Context: Current Time: ${dateStr}, User Location: ${cityName}, India.]\n` +
+         `Identity Rules:\n` +
          `- Aapka naam "RakeshAi" hai.\n` +
          `- Jab sawaal specific ho ki "tumhara malik kaun hai", "tumhe kisne banaya", ya "who is your owner/creator", tab spasht batayein ki aapke malik aur nirmata "Rakesh Shukla" hain.\n` +
-         `- DHYAN RAHE: Agar kisi doosri company ya vyakti ke malik ke baare me poocha jaye (jaise Google, Microsoft, Apple, Tesla, Twitter, Tata, Reliance), toh Rakesh Shukla ka naam KABHI MAT LEIN. Us company ke asali owner/founders (jaise Google ke Larry Page, Sergey Brin aur parent company Alphabet) ka sachha jawab dein.\n\n` +
-         `Universal Spelling & Typo Tolerance:\n` +
-         `- User ki query me spelling mistakes, typos ya galat shabdon ko ignore karein aur sentence ke context se asal matlab samjhein. (Example: "jahreela saaf" ka matlab "jahreela saanp", "femous" ka matlab "famous", "kanha" ka matlab "kahan"). Galat literal arth nikaal kar off-topic jawab na dein.\n\n` +
-         `Strict Language Rules:\n` +
-         `- Agar user Hindi me ya Romanized Hinglish me sawal pooche (e.g. "google ka malik kaun hai", "tum kaise ho", "aaj ka mausam kaisa hai"), toh aapko hamesha HINDI (Devanagari Lipi - हिंदी) me hi spasht jawab dena hai.\n` +
-         `- Agar user English me pooche, toh English me jawab dein.\n` +
-         `- Agar user kisi doosri bhasha me pooche (Tamil, Telugu, Gujarati, Bengali, etc.), toh usi bhasha me jawab dein.\n\n` +
-         `Tone & Formatting:\n` +
-         `- Jawab seedha, saaf, bina faltu bhed-bhav ke, point-to-point dein.\n` +
-         `- Code blocks me programming language tag zaroor likhein (e.g. \`\`\`python).\n\n`;
+         `- Agar kisi doosri company ya vyakti ke malik ke baare me poocha jaye (jaise Google, Microsoft, Apple, Tesla, Twitter, Tata, Reliance), toh Rakesh Shukla ka naam bilkul na lein; unke actual owners/founders ka satik jawab dein.\n\n` +
+         `ChatGPT-Style Visual Presentation Rules:\n` +
+         `1. Structure & Headers: Uttaron ko sections me baantein. Relevant emojis ke sath Markdown subheadings ('### ') ka use karein.\n` +
+         `2. Spacing: Paragraphs ko 2-3 lines tak rakhein aur clean spacing maintain karein.\n` +
+         `3. Bullet Points: Lists ko organize karne ke liye '-' ya numbered points '1.' ka use karein.\n` +
+         `4. Visual Emphasis: Mukhya terms, takeaways aur concepts ko **Bold** karein. Important notes ke liye blockquotes ('> ℹ️ ...') ka prayog karein.\n` +
+         `5. Tables: Facts, features ya comparisons ke liye clean Markdown Tables (| Header | Header |) banayein.\n` +
+         `6. Code Blocks: Coding answers me formal code blocks (\`\`\`language) ka use karein.\n` +
+         `7. Language: Agar user Hindi ya Roman Hinglish me pooche toh standard Hindi (Devanagari Lipi) me spasht aur polite jawab dein. English ke sawalon ka jawab English me dein.\n\n`;
 }
 
 // ----------------------------------------------------
@@ -144,7 +142,6 @@ const languageMap = {
 function detectUserIntent(text) {
   const q = text.toLowerCase().trim();
 
-  // A. AI ka Apna Malik / Creator Check (Sirf RakeshAi ke liye)
   const isAboutAI = /\b(tumhara|tumhe|aapka|aapko|your|tera|ye ai|is ai)\b/i.test(q) ||
                     q === 'malik kaun hai' || q === 'owner kaun hai' || q === 'who is your owner';
   const hasOwnerWord = /\b(malik|maalik|owner|creator|nirmata|banaya)\b/i.test(q);
@@ -155,7 +152,6 @@ function detectUserIntent(text) {
     return 'BOT_OWNER_QUERY';
   }
 
-  // B. Translation Intent Check (Strict)
   const isExplicitTranslate = /\b(translate|anuvad|meaning of|arth)\b/i.test(q);
   const isLanguageAtEnd = Object.keys(languageMap).some(l => {
     const endRegex = new RegExp(`\\b(in|into|to)\\s+${l}\\b$`, 'i');
@@ -170,13 +166,11 @@ function detectUserIntent(text) {
     }
   }
 
-  // C. Weather Intent
   const weatherWords = ['weather', 'mausam', 'tapman', 'temperature', 'humidity', 'barish', 'aaj barish hogi'];
   if (weatherWords.some(w => q.includes(w))) {
     return 'WEATHER';
   }
 
-  // D. Local Places & Attractions Intent
   const placeTerms = [
     'aas paas', 'aas-paas', 'aas pas', 'aas paak', 'nearby', 'near me',
     'paas me', 'famous jagah', 'ghoomne', 'ghumne', 'places to visit',
@@ -187,35 +181,29 @@ function detectUserIntent(text) {
     return 'NEARBY_PLACES';
   }
 
-  // E. Greetings
   const greetings = ['hello', 'hi', 'hey', 'namaste', 'pranam', 'kaise ho', 'how are you', 'kya haal hai', 'who are you', 'kaun ho'];
   const cleanWord = q.replace(/[?,.!]/g, '');
   if (greetings.some(g => cleanWord === g || cleanWord.startsWith(g + ' ') || cleanWord.endsWith(' ' + g))) {
     return 'GREETING';
   }
 
-  // F. BODMAS Math
   const isMathWords = /(divided\s+by|devied\s+by|divide\s+by|bhaag|multiplied\s+by|into|guna|plus|add|minus|subtract|\+|\-|\*|\/|\^)/i.test(q);
   if (/\d/.test(q) && isMathWords && !q.includes('pincode') && !q.includes('ifsc') && !q.includes('date')) {
     return 'MATH';
   }
 
-  // G. Bank IFSC
   if (/\b[A-Z]{4}0[A-Z0-9]{6}\b/i.test(q)) {
     return 'IFSC';
   }
 
-  // H. Pincode
   if (/\b\d{6}\b/.test(q) || q.includes('pincode') || q.includes('pin code')) {
     return 'PINCODE';
   }
 
-  // I. Wikipedia Query
   if (q.includes('kya hai') || q.includes('what is') || q.includes('who is') || q.includes('meaning of')) {
     return 'WIKI';
   }
 
-  // J. Live Web Search
   if (q.includes('last date') || q.includes('sarkari') || q.includes('yojana') || q.includes('score') || q.includes('match') || q.includes('kab aayega')) {
     return 'WEB_SEARCH';
   }
@@ -228,7 +216,7 @@ function getBotOwnerResponse() {
 }
 
 // ----------------------------------------------------
-// 5. LOCAL GUIDE ENGINE (GEOAPIFY + STRICT 15KM RADIUS)
+// 5. LOCAL GUIDE ENGINE (GEOAPIFY + 15KM RADIUS)
 // ----------------------------------------------------
 async function handleNearbyPlaces(query, userLocation) {
   const geoKey = process.env.GEOAPIFY_API_KEY?.trim();
@@ -289,11 +277,11 @@ async function handleNearbyPlaces(query, userLocation) {
 
   try {
     const aiReply = await executeSmartAIRoute(placesPrompt, [], null, userLocation);
-    return `## ${categoryLabel} — **${cityName}**\n\n` + aiReply;
+    return `### ${categoryLabel} — **${cityName}**\n\n` + aiReply;
   } catch (err) {
-    let out = `## ${categoryLabel} — **${cityName}**\n\n`;
+    let out = `### ${categoryLabel} — **${cityName}**\n\n`;
     placesData.slice(0, 5).forEach((p, idx) => {
-      out += `### ${idx + 1}. **${p.name}**\n- 📍 **पता:** ${p.address}\n- 📏 **दूरी:** ${p.distance}\n\n`;
+      out += `**${idx + 1}. ${p.name}**\n- 📍 **पता:** ${p.address}\n- 📏 **दूरी:** ${p.distance}\n\n`;
     });
     return out;
   }
@@ -446,7 +434,7 @@ async function getWeather(query, userCity = null) {
     const area = res.data.nearest_area[0].areaName[0].value;
     const country = res.data.nearest_area[0].country[0].value;
 
-    return `## 🌤️ <u>**लाइव मौसम — ${area}, ${country}**</u>\n\n` +
+    return `### 🌤️ लाइव मौसम — ${area}, ${country}\n\n` +
            `| पैरामीटर | स्थिति |\n` +
            `| :--- | :--- |\n` +
            `| 🌦️ **स्थिति** | **${c.weatherDesc[0].value}** |\n` +
@@ -483,9 +471,9 @@ async function getWebSearch(query) {
     const matches = [...xml.matchAll(/<item>[\s\S]*?<title>(?:<!\[CDATA\[)?(.*?)(?:\]\]>)?<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?<\/item>/g)];
 
     if (matches.length > 0) {
-      let out = `## <u>ताज़ा अपडेट: <span style="color: #2563eb;">${query.toUpperCase()}</span></u>\n\n`;
+      let out = `### 📰 ताज़ा अपडेट: **${query.toUpperCase()}**\n\n`;
       matches.slice(0, 4).forEach((m, i) => {
-        out += `### ${i + 1}. ${m[1].replace(/<[^>]+>/g, '').trim()}\n[विस्तार से पढ़ें](${m[2].trim()})\n\n---\n`;
+        out += `**${i + 1}. ${m[1].replace(/<[^>]+>/g, '').trim()}**\n[विस्तार से पढ़ें](${m[2].trim()})\n\n---\n`;
       });
       return out;
     }
@@ -666,40 +654,28 @@ async function processUserQuery(userText, location, history = [], attachment = n
 
   let reply = null;
 
-  // Level 1: Bot Identity
   if (intent === 'BOT_OWNER_QUERY') {
     reply = getBotOwnerResponse();
-  }
-  // Level 2: Fast Local & Zero-Token Handlers
-  else if (intent === 'WEATHER') {
+  } else if (intent === 'WEATHER') {
     reply = await getWeather(userText, location?.city);
-  }
-  else if (intent === 'NEARBY_PLACES') {
+  } else if (intent === 'NEARBY_PLACES') {
     reply = await handleNearbyPlaces(userText, location);
-  }
-  else if (intent === 'TRANSLATION') {
+  } else if (intent === 'TRANSLATION') {
     reply = await handleTranslationWithPronunciation(userText);
-  }
-  else if (intent === 'GREETING') {
+  } else if (intent === 'GREETING') {
     reply = getGreetingResponse(userText);
-  }
-  else if (intent === 'MATH') {
+  } else if (intent === 'MATH') {
     reply = evaluateMathExpression(userText);
-  }
-  else if (intent === 'IFSC') {
+  } else if (intent === 'IFSC') {
     reply = await getIFSCDetails(userText);
-  }
-  else if (intent === 'PINCODE') {
+  } else if (intent === 'PINCODE') {
     reply = await getPincodeDetails(userText);
-  }
-  else if (intent === 'WIKI') {
+  } else if (intent === 'WIKI') {
     reply = await getWikiSummary(userText);
-  }
-  else if (intent === 'WEB_SEARCH') {
+  } else if (intent === 'WEB_SEARCH') {
     reply = await getWebSearch(userText);
   }
 
-  // Level 3: AI Cascade (Gemini -> Groq)
   if (!reply) {
     reply = await executeSmartAIRoute(finalPrompt, history, processedMedia, location);
   }
@@ -746,15 +722,12 @@ async function saveMessageSmartly(userId, sessionId, role, text, intent, attachm
 }
 
 // ----------------------------------------------------
-// 13. MASTER API ENDPOINTS (WITH STRICT AUTH GUARD)
+// 13. MASTER API ENDPOINTS (WITH AUTH GUARD)
 // ----------------------------------------------------
-
-// Text / Document Chat Endpoint
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, attachment, history = [], location = null, userId = null, sessionId = 'default' } = req.body;
 
-    // STRICT AUTH GUARD: Bina valid Google login ke query process nahi hogi
     if (!userId || userId === 'guest_user' || userId === 'anonymous' || userId.startsWith('guest_')) {
       return res.status(401).json({
         reply: "⚠️ **Login Required:** Kripya pehle Google account se login karein. Bina login ke RakeshAi se sawal nahi pooch sakte.",
@@ -793,12 +766,10 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// Voice-to-Text Endpoint
 app.post('/api/voice-chat', async (req, res) => {
   try {
     const { audioBase64, location = null, userId = null, sessionId = 'default', history = [] } = req.body;
 
-    // STRICT AUTH GUARD for Voice
     if (!userId || userId === 'guest_user' || userId === 'anonymous' || userId.startsWith('guest_')) {
       return res.status(401).json({
         transcribedText: '',
@@ -843,6 +814,7 @@ app.post('/api/voice-chat', async (req, res) => {
   }
 });
 
+// Render port binding standard
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 RakeshAi Master Server running on port ${PORT}`);
 });

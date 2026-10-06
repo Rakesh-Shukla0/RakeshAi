@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>RakeshAi Web Assistant</title>
+  <title>RakeshAi — Next-Gen Smart AI Assistant</title>
 
   <!-- Firebase App, Auth & Firestore SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -22,26 +22,408 @@
       --bg-main: #f8fafc;
       --bg-sidebar: #ffffff;
       --border-color: #e2e8f0;
-      --text-primary: #1e293b;
+      --text-primary: #0f172a;
       --text-secondary: #64748b;
       --primary-color: #2563eb;
       --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
       --user-msg-bg: #2563eb;
       --bot-msg-bg: #f1f5f9;
       --code-bg: #0f172a;
       --danger-color: #ef4444;
+      --accent-gradient: linear-gradient(135deg, #2563eb 0%, #7c3aed 50%, #db2777 100%);
     }
 
     body {
       background-color: var(--bg-main);
       color: var(--text-primary);
-      display: flex;
       height: 100vh;
       overflow: hidden;
       position: relative;
     }
 
-    /* Mobile Backdrop Overlay */
+    /* ============================================================
+       LANDING PAGE (SHOWN WHEN LOGGED OUT)
+       ============================================================ */
+    #landing-page {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 15% 20%, rgba(37, 99, 235, 0.08), transparent 35%),
+                  radial-gradient(circle at 85% 70%, rgba(124, 58, 237, 0.08), transparent 35%),
+                  #f8fafc;
+      overflow-y: auto;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      scroll-behavior: smooth;
+    }
+
+    /* Landing Nav */
+    .landing-nav {
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 36px;
+      z-index: 20;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.3rem;
+      font-weight: 800;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-badge {
+      font-size: 0.7rem;
+      background: #eff6ff;
+      color: var(--primary-color);
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #bfdbfe;
+      -webkit-text-fill-color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn-login-nav {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-login-nav:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+
+    .btn-cta-primary {
+      background: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      padding: 10px 22px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      transition: all 0.25s ease;
+    }
+
+    .btn-cta-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+    }
+
+    /* Hero Section */
+    .hero-section {
+      padding: 80px 20px 60px;
+      text-align: center;
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      background: rgba(37, 99, 235, 0.08);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      color: var(--primary-color);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      animation: floatBadge 3s ease-in-out infinite;
+    }
+
+    @keyframes floatBadge {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .hero-title {
+      font-size: 3.2rem;
+      line-height: 1.15;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -1.2px;
+      margin-bottom: 20px;
+    }
+
+    .hero-title span {
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.15rem;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      max-width: 680px;
+      margin-bottom: 34px;
+    }
+
+    .hero-actions-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 48px;
+    }
+
+    .hero-cta-btn {
+      padding: 14px 34px;
+      font-size: 1.05rem;
+      border-radius: 999px;
+      background: var(--accent-gradient);
+      color: #fff;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.35);
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .hero-cta-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 14px 32px rgba(37, 99, 235, 0.45);
+    }
+
+    .hero-preview-card {
+      width: 100%;
+      max-width: 820px;
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 18px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+      overflow: hidden;
+      margin: 0 auto 70px;
+      text-align: left;
+    }
+
+    .preview-header {
+      background: #f8fafc;
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+    }
+    .dot.red { background: #f87171; }
+    .dot.yellow { background: #fbbf24; }
+    .dot.green { background: #4ade80; }
+
+    .preview-body {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .preview-user-msg {
+      align-self: flex-end;
+      background: var(--primary-color);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 14px 14px 2px 14px;
+      font-size: 0.92rem;
+      max-width: 75%;
+    }
+
+    .preview-bot-msg {
+      align-self: flex-start;
+      background: #f1f5f9;
+      color: #1e293b;
+      padding: 14px 18px;
+      border-radius: 14px 14px 14px 2px;
+      font-size: 0.92rem;
+      max-width: 80%;
+      border: 1px solid var(--border-color);
+    }
+
+    /* Capabilities Showcase Section */
+    .features-section {
+      background: #ffffff;
+      border-top: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-color);
+      padding: 80px 24px;
+      width: 100%;
+    }
+
+    .section-header {
+      text-align: center;
+      max-width: 650px;
+      margin: 0 auto 50px;
+    }
+
+    .section-header h2 {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.6px;
+      margin-bottom: 12px;
+    }
+
+    .section-header p {
+      color: var(--text-secondary);
+      font-size: 1rem;
+    }
+
+    .features-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      padding: 28px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.06);
+      border-color: #cbd5e1;
+      background: #ffffff;
+    }
+
+    .feature-icon-wrapper {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      background: #eff6ff;
+      color: var(--primary-color);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      margin-bottom: 18px;
+    }
+
+    .feature-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 8px;
+    }
+
+    .feature-card p {
+      font-size: 0.92rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* Footer */
+    .landing-footer {
+      padding: 34px 20px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.88rem;
+      background: #f8fafc;
+    }
+
+    /* Auth Modal */
+    #auth-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(4px);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    #auth-modal.active {
+      display: flex;
+    }
+
+    .auth-modal-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 36px 30px;
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+      position: relative;
+      animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes modalPop {
+      0% { transform: scale(0.92); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-close-btn {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      background: none;
+      border: none;
+      font-size: 1.4rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+
+    /* ============================================================
+       APPLICATION CHAT UI (SHOWN WHEN LOGGED IN)
+       ============================================================ */
+    #app-container {
+      display: none;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
     #sidebar-overlay {
       display: none;
       position: fixed;
@@ -51,7 +433,6 @@
       z-index: 998;
     }
 
-    /* Universal Responsive Sidebar */
     #sidebar {
       width: 290px;
       min-width: 290px;
@@ -116,7 +497,6 @@
 
     .new-chat-btn:hover { background-color: #dbeafe; }
 
-    /* Scrollable History List */
     .history-list {
       flex: 1;
       overflow-y: auto;
@@ -191,7 +571,6 @@
       background-color: #fee2e2;
     }
 
-    /* Profile Section */
     .profile-section {
       padding: 14px 16px;
       border-top: 1px solid var(--border-color);
@@ -269,7 +648,6 @@
     .dropdown-action-btn.logout { color: var(--danger-color); }
     .dropdown-action-btn:hover { background-color: #f8fafc; }
 
-    /* Main Chat Layout */
     #main-content {
       flex: 1;
       display: flex;
@@ -354,42 +732,21 @@
       border: 1px solid var(--border-color);
     }
 
-    /* Login Required Alert Banner */
-    .login-lock-card {
-      background-color: #eff6ff;
-      border: 1px solid #bfdbfe;
-      border-radius: 12px;
-      padding: 20px;
-      text-align: center;
-      max-width: 450px;
-      margin: 40px auto;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08);
-    }
-
-    .login-lock-card h3 {
-      font-size: 1.1rem;
-      color: var(--primary-color);
-      margin-bottom: 8px;
-    }
-
-    .login-lock-card p {
-      font-size: 0.88rem;
-      color: var(--text-secondary);
-      margin-bottom: 16px;
-    }
-
     .google-signin-btn {
       background-color: #ffffff;
       color: #1e293b;
       border: 1px solid #cbd5e1;
-      padding: 10px 20px;
-      border-radius: 24px;
-      font-size: 0.9rem;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       transition: all 0.2s;
     }
 
@@ -399,7 +756,6 @@
       color: var(--primary-color);
     }
 
-    /* Code Blocks */
     .code-container {
       position: relative;
       background: var(--code-bg);
@@ -467,7 +823,6 @@
       border-color: var(--primary-color);
     }
 
-    /* Input Bar */
     #input-container {
       background-color: #ffffff;
       padding: 12px 18px;
@@ -494,12 +849,6 @@
       background-color: #ffffff;
     }
 
-    #user-input:disabled {
-      background-color: #f1f5f9;
-      cursor: not-allowed;
-      color: #94a3b8;
-    }
-
     .action-circle-btn {
       width: 42px;
       height: 42px;
@@ -511,11 +860,6 @@
       justify-content: center;
       font-size: 1.1rem;
       transition: all 0.2s;
-    }
-
-    .action-circle-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
     }
 
     #mic-btn {
@@ -545,6 +889,9 @@
     #send-btn:hover:not(:disabled) { background-color: var(--primary-hover); }
 
     @media (max-width: 768px) {
+      .landing-nav { padding: 14px 18px; }
+      .hero-title { font-size: 2.2rem; }
+      .hero-subtitle { font-size: 1rem; }
       #sidebar {
         position: fixed;
         left: 0;
@@ -563,66 +910,194 @@
 </head>
 <body>
 
-  <div id="sidebar-overlay"></div>
-
-  <!-- Universal Sidebar -->
-  <aside id="sidebar">
-    <div class="sidebar-header">
-      <h2>Chat History</h2>
-      <button class="close-icon-btn" id="close-sidebar-btn" title="Close Sidebar">&times;</button>
-    </div>
-
-    <div class="new-chat-btn" id="new-chat-btn">
-      <span>+</span> Nayi Chat Shuru Karein
-    </div>
-
-    <div class="history-list" id="history-container"></div>
-
-    <div class="profile-section">
-      <div class="logout-dropdown" id="logout-menu">
-        <button class="dropdown-action-btn login" id="auth-action-btn">🔑 Google se Login</button>
+  <!-- ============================================================
+       1. LANDING PAGE (VISIBLE TO GUESTS)
+       ============================================================ -->
+  <div id="landing-page">
+    <nav class="landing-nav">
+      <div class="brand-logo">
+        ⚡ RakeshAi
+        <span class="brand-badge">PRO V2.5</span>
       </div>
-      <div class="profile-card" id="profile-btn">
-        <div class="avatar" id="user-avatar">?</div>
-        <div class="profile-info">
-          <div class="profile-name" id="user-display-name">Guest User</div>
-          <div class="profile-status" id="user-status-text">Click to Login</div>
+      <div class="nav-actions">
+        <button class="btn-login-nav" onclick="openAuthModal()">Login</button>
+        <button class="btn-cta-primary" onclick="openAuthModal()">Use AI for Free →</button>
+      </div>
+    </nav>
+
+    <section class="hero-section">
+      <div class="hero-pill">
+        ✨ Advanced Multi-Model Architecture (Gemini 2.5 + Groq)
+      </div>
+
+      <h1 class="hero-title">
+        Apka Personal <span>Intelligent AI</span> Assistant
+      </h1>
+
+      <p class="hero-subtitle">
+        Har sawal ka satik jawab, live mausam jankari, aas-paas ghoomne ke sthan, bhasha anuvad, BODMAS math solver aur documents analysis — sab kuch ek hi jagah.
+      </p>
+
+      <div class="hero-actions-container">
+        <button class="hero-cta-btn" onclick="openAuthModal()">
+          🚀 Use AI for Free
+        </button>
+      </div>
+
+      <!-- Live Floating Preview Card -->
+      <div class="hero-preview-card">
+        <div class="preview-header">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+          <span style="font-size: 12px; color: #64748b; margin-left: 10px;">RakeshAi Interactive Shell</span>
+        </div>
+        <div class="preview-body">
+          <div class="preview-user-msg">
+            Agra me aas-paas ghoomne ki best jagah bataiye?
+          </div>
+          <div class="preview-bot-msg">
+            🏛️ <strong>आस-पास घूमने की प्रसिद्ध जगहें — Agra:</strong><br/><br/>
+            1. <strong>ताजमहल (Taj Mahal):</strong> 📍 विश्व धरोहर व प्रेम का प्रतीक (दूरी ~3.5 km)<br/>
+            2. <strong>आगरा का किला (Agra Fort):</strong> 📍 मुग़ल वास्तुकला की बेमिसाल मिसाल (दूरी ~4.8 km)<br/>
+            3. <strong>मेहताब बाग:</strong> 📍 यमुना किनारे से सूर्यास्त का अद्भुत नज़ारा (दूरी ~6.1 km)
+          </div>
         </div>
       </div>
-    </div>
-  </aside>
+    </section>
 
-  <!-- Main Content Area -->
-  <main id="main-content">
-    <header>
-      <button class="menu-btn" id="open-sidebar-btn" title="Toggle Sidebar">&#9776;</button>
-      <h1>RakeshAi</h1>
-      <span class="header-location" id="location-text">📍 Location Check...</span>
-    </header>
+    <!-- Capabilities Showcase -->
+    <section class="features-section">
+      <div class="section-header">
+        <h2>RakeshAi Kya-Kya Kar Sakta Hai?</h2>
+        <p>Ek platform par comprehensive AI tools ka power-packed collection</p>
+      </div>
 
-    <div id="chat-box">
-      <!-- Default Greeting or Login Notice dynamically injected -->
-    </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">🧠</div>
+          <h3>Dual-Brain AI Reasoning</h3>
+          <p>Google Gemini 2.5 Flash aur Groq High-Speed inference se complex sawalon ka palak jhapakte hi jawab paayein.</p>
+        </div>
 
-    <div id="input-container">
-      <input type="text" id="user-input" placeholder="⚠️ Pehle Google se login karein..." autocomplete="off" disabled />
-      <button class="action-circle-btn" id="mic-btn" title="Voice Input" disabled>🎤</button>
-      <button class="action-circle-btn" id="send-btn" title="Send" disabled>➤</button>
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">📍</div>
+          <h3>Local GPS Tourist & Food Guide</h3>
+          <p>Geoapify GPS integration se aapke shehar me 15km ke radius me mashhoor sthan, temples aur best food spots khojein.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">🌦️</div>
+          <h3>Live Weather & Forecast</h3>
+          <p>Real-time tapman, humidity, hawa ki speed aur mausam ka instant live status table ke roop me dekhein.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">🌐</div>
+          <h3>Smart Translator with Pronunciation</h3>
+          <p>20+ bhashaon me satik anuvad ke sath shuddh uchcharan (phonetic pronunciation) seekhein aur sunein.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">🧮</div>
+          <h3>BODMAS & Financial Utilities</h3>
+          <p>Jatil mathematical calculations, Bank IFSC codes aur India Post PIN codes ki jankari bina deri ke paayein.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon-wrapper">🎙️</div>
+          <h3>Voice Interaction & Speech</h3>
+          <p>Hindi & English me bolkar sawal poochein aur assistant ke responses ko clear voice me sunein.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="landing-footer">
+      Designed & Developed by <strong>Rakesh Shukla</strong> • Powered by RakeshAi Web
+    </footer>
+  </div>
+
+  <!-- Google Login Modal -->
+  <div id="auth-modal">
+    <div class="auth-modal-card">
+      <button class="modal-close-btn" onclick="closeAuthModal()">&times;</button>
+      <div style="font-size: 2.4rem; margin-bottom: 12px;">⚡</div>
+      <h3 style="font-size: 1.35rem; color: #0f172a; margin-bottom: 8px;">Continue with Google</h3>
+      <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 24px; line-height: 1.5;">
+        RakeshAi ke sabhi features aur cloud chat history access karne ke liye apne Google account se sign in karein.
+      </p>
+      <button class="google-signin-btn" onclick="triggerGoogleLogin()">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" height="20" alt="Google" />
+        Continue with Google
+      </button>
     </div>
-  </main>
+  </div>
+
+  <!-- ============================================================
+       2. FULL CHAT APPLICATION (SHOWN AFTER SUCCESSFUL LOGIN)
+       ============================================================ -->
+  <div id="app-container">
+    <div id="sidebar-overlay"></div>
+
+    <!-- Universal Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <h2>Chat History</h2>
+        <button class="close-icon-btn" id="close-sidebar-btn" title="Close Sidebar">&times;</button>
+      </div>
+
+      <div class="new-chat-btn" id="new-chat-btn">
+        <span>+</span> Nayi Chat Shuru Karein
+      </div>
+
+      <div class="history-list" id="history-container"></div>
+
+      <div class="profile-section">
+        <div class="logout-dropdown" id="logout-menu">
+          <button class="dropdown-action-btn logout" id="auth-action-btn">🚪 Logout Karein</button>
+        </div>
+        <div class="profile-card" id="profile-btn">
+          <div class="avatar" id="user-avatar">?</div>
+          <div class="profile-info">
+            <div class="profile-name" id="user-display-name">User</div>
+            <div class="profile-status" id="user-status-text">Active Session</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main id="main-content">
+      <header>
+        <button class="menu-btn" id="open-sidebar-btn" title="Toggle Sidebar">&#9776;</button>
+        <h1>RakeshAi</h1>
+        <span class="header-location" id="location-text">📍 Location Check...</span>
+      </header>
+
+      <div id="chat-box">
+        <!-- Messages dynamically injected -->
+      </div>
+
+      <div id="input-container">
+        <input type="text" id="user-input" placeholder="Apna sawal yahan likhein ya mic dabayein..." autocomplete="off" />
+        <button class="action-circle-btn" id="mic-btn" title="Voice Input">🎤</button>
+        <button class="action-circle-btn" id="send-btn" title="Send">➤</button>
+      </div>
+    </main>
+  </div>
 
   <script>
     // ==========================================
     // 1. FIREBASE AUTH & FIRESTORE CONFIGURATION
     // ==========================================
-     const firebaseConfig = {
-        apiKey: "AIzaSyBg_b1Ju50LiIgkgLdxmfZOm-rAGOi0sEM",
-        authDomain: "rakeshai-web.firebaseapp.com",
-        projectId: "rakeshai-web",
-        storageBucket: "rakeshai-web.firebasestorage.app",
-        messagingSenderId: "1095603512241",
-        appId: "1:1095603512241:web:5e5cdbf6ebf14f8259d390",
-        measurementId: "G-1LYSX7VKCY"
+    const firebaseConfig = {
+      apiKey: "AIzaSyBg_b1Ju50LiIgkgLdxmfZOm-rAGOi0sEM",
+      authDomain: "rakeshai-web.firebaseapp.com",
+      projectId: "rakeshai-web",
+      storageBucket: "rakeshai-web.firebasestorage.app",
+      messagingSenderId: "1095603512241",
+      appId: "1:1095603512241:web:5e5cdbf6ebf14f8259d390",
+      measurementId: "G-1LYSX7VKCY"
     };
 
     let auth = null;
@@ -630,6 +1105,10 @@
     let currentUser = null;
     let currentUserId = null;
     let isFirebaseReady = false;
+
+    const landingPage = document.getElementById('landing-page');
+    const appContainer = document.getElementById('app-container');
+    const authModal = document.getElementById('auth-modal');
 
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
@@ -645,6 +1124,14 @@
     }
     let localCache = JSON.parse(localStorage.getItem('rakesh_ai_local_sessions') || '{}');
 
+    function openAuthModal() {
+      authModal.classList.add('active');
+    }
+
+    function closeAuthModal() {
+      authModal.classList.remove('active');
+    }
+
     try {
       if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
         firebase.initializeApp(firebaseConfig);
@@ -656,7 +1143,7 @@
           currentUser = user;
           if (user) {
             currentUserId = user.uid;
-            unlockChatUI(user);
+            showAppView(user);
             loadSidebarFromFirestore();
             if (currentSessionId && localCache[currentSessionId]) {
               loadSession(currentSessionId);
@@ -665,53 +1152,29 @@
             }
           } else {
             currentUserId = null;
-            lockChatUI();
+            showLandingView();
           }
         });
       } else {
-        lockChatUI();
+        showLandingView();
       }
     } catch (e) {
       console.warn("Firebase Init notice:", e.message);
-      lockChatUI();
+      showLandingView();
     }
 
-    // UI Locks when not logged in
-    function lockChatUI() {
-      userInput.disabled = true;
-      sendBtn.disabled = true;
-      micBtn.disabled = true;
-      userInput.placeholder = "⚠️ Sawal poochne ke liye pehle login karein...";
-
-      document.getElementById('user-display-name').textContent = "Guest User";
-      document.getElementById('user-status-text').textContent = "Login Required";
-      document.getElementById('user-avatar').style.backgroundImage = 'none';
-      document.getElementById('user-avatar').textContent = '?';
-
-      const authBtn = document.getElementById('auth-action-btn');
-      authBtn.textContent = "🔑 Google se Login";
-      authBtn.className = "dropdown-action-btn login";
-
-      historyContainer.innerHTML = '';
-
-      chatBox.innerHTML = `
-        <div class="login-lock-card">
-          <h3>🔒 Login Required</h3>
-          <p>RakeshAi se baat karne aur chat history save karne ke liye kripya apne Google account se sign in karein.</p>
-          <button class="google-signin-btn" onclick="triggerGoogleLogin()">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18" alt="Google" />
-            Google se Sign In Karein
-          </button>
-        </div>
-      `;
+    function showLandingView() {
+      landingPage.style.display = 'flex';
+      appContainer.style.display = 'none';
+      closeAuthModal();
+      document.body.style.overflow = 'auto';
     }
 
-    // UI Unlocks when logged in
-    function unlockChatUI(user) {
-      userInput.disabled = false;
-      sendBtn.disabled = false;
-      micBtn.disabled = false;
-      userInput.placeholder = "Apna sawal yahan likhein ya mic dabayein...";
+    function showAppView(user) {
+      landingPage.style.display = 'none';
+      appContainer.style.display = 'flex';
+      closeAuthModal();
+      document.body.style.overflow = 'hidden';
 
       document.getElementById('user-display-name').textContent = user.displayName || "User";
       document.getElementById('user-status-text').textContent = "Google Account";
@@ -724,27 +1187,25 @@
         avatarEl.style.backgroundImage = 'none';
         avatarEl.textContent = (user.displayName || 'U')[0].toUpperCase();
       }
-
-      const authBtn = document.getElementById('auth-action-btn');
-      authBtn.textContent = "🚪 Logout Karein";
-      authBtn.className = "dropdown-action-btn logout";
     }
 
     function triggerGoogleLogin() {
       if (!isFirebaseReady) {
-        alert("Pehle index.html me apni Firebase keys paste karein.");
+        alert("Firebase keys verify karein.");
         return;
       }
       const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithPopup(provider).catch((err) => alert("Login Error: " + err.message));
+      auth.signInWithPopup(provider)
+        .then(() => closeAuthModal())
+        .catch((err) => alert("Login Error: " + err.message));
     }
 
     document.getElementById('auth-action-btn').addEventListener('click', () => {
       if (currentUser) {
-        auth.signOut().then(() => document.getElementById('logout-menu').classList.remove('active'));
-      } else {
-        triggerGoogleLogin();
-        document.getElementById('logout-menu').classList.remove('active');
+        auth.signOut().then(() => {
+          document.getElementById('logout-menu').classList.remove('active');
+          showLandingView();
+        });
       }
     });
 
@@ -1085,7 +1546,7 @@
 
     micBtn.onclick = () => {
       if (!currentUser) {
-        alert("Pehle Google se login karein!");
+        openAuthModal();
         return;
       }
       if (!SpeechRecognition) {
@@ -1104,8 +1565,7 @@
     // ==========================================
     async function handleSendMessage() {
       if (!currentUser) {
-        alert("⚠️ Sawal poochne ke liye pehle Google account se login karein!");
-        triggerGoogleLogin();
+        openAuthModal();
         return;
       }
 
@@ -1183,7 +1643,7 @@
           } catch(e) {}
         }
       } catch (err) {
-        loadingDiv.textContent = "Server se response nahi mila. Check karein ki backend terminal me chal raha hai.";
+        loadingDiv.textContent = "Server se response nahi mila. Check karein ki backend active hai.";
       }
       chatBox.scrollTop = chatBox.scrollHeight;
     }
